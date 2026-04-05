@@ -1,0 +1,9 @@
+name: default_inference
+seed: 42
+batch_size: 8
+mixed_precision: bf16
+prediction:
+  max_new_tokens: 64
+  temperature: 0.0
+  top_p: 1.0
+  num_beams: 1

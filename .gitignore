@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project artifacts and heavy assets
+data/raw/
+data/interim/
+data/processed/
+data/external/
+artifacts/
+checkpoints/
+outputs/
+wandb/
