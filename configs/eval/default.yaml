@@ -1,0 +1,11 @@
+name: default_eval
+seed: 42
+batch_size: 16
+mixed_precision: bf16
+metrics:
+  - accuracy
+  - f1_macro
+  - exact_match
+prediction:
+  max_new_tokens: 32
+  temperature: 0.0

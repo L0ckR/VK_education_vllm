@@ -1,0 +1,12 @@
+experiment_name: gqa_ru_baseline
+seed: 42
+
+data_config: configs/data/gqa_ru.yaml
+model_config: configs/model/base_vlm.yaml
+train_config: configs/train/lora_ft.yaml
+eval_config: configs/eval/default.yaml
+
+run:
+  output_dir: runs/gqa_ru_baseline
+  checkpoint_dir: checkpoints/gqa_ru_baseline
+  eval_metric: accuracy
