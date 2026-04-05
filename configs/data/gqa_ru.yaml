@@ -1,0 +1,8 @@
+name: gqa_ru
+train_path: data/gqa_ru/train.jsonl
+val_path: data/gqa_ru/val.jsonl
+test_path: data/gqa_ru/test.jsonl
+image_root: data/gqa_ru/images
+question_field: question
+answer_field: answer
+metric_primary: accuracy
