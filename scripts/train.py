@@ -4,14 +4,24 @@
 from __future__ import annotations
 
 import argparse
+import json
+import sys
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from vk_vlm_project.config import load_experiment_config
+from vk_vlm_project.train import run_training
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run model training")
-    parser.add_argument("--config", required=True, help="Path to the training config file")
+    parser.add_argument("--config", required=True, help="Path to the experiment config file")
     parser.add_argument("--device", default=None, help="Device override (e.g. cuda:0)")
-    parser.add_argument("--output-dir", default=None, help="Directory for artifacts/checkpoints")
+    parser.add_argument("--output-dir", default=None, help="Directory for checkpoints")
     parser.add_argument("--resume", default=None, help="Path to checkpoint for resume")
     return parser
 
@@ -23,12 +33,14 @@ def main() -> int:
     if not config_path.exists():
         raise FileNotFoundError(f"Config file does not exist: {config_path}")
 
-    print("[train] starting")
-    print(f"[train] config={config_path}")
-    print(f"[train] device={args.device or 'default'}")
-    print(f"[train] output_dir={args.output_dir or 'default'}")
-    print(f"[train] resume={args.resume or 'none'}")
-    # TODO: replace prints with actual training pipeline invocation.
+    config = load_experiment_config(config_path)
+    metrics = run_training(
+        config=config,
+        device=args.device,
+        output_dir=args.output_dir,
+        resume_from_checkpoint=args.resume,
+    )
+    print(json.dumps(metrics, ensure_ascii=False, indent=2))
     return 0
 
 

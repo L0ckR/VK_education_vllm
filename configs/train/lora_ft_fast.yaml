@@ -1,9 +1,9 @@
-name: lora_ft
+name: lora_ft_fast
 seed: 42
 mixed_precision: bf16
 batch_size: 8
-grad_accumulation_steps: 4
-num_train_epochs: 3
+grad_accumulation_steps: 1
+num_train_epochs: 1
 learning_rate: 2.0e-4
 weight_decay: 0.01
 warmup_ratio: 0.03
@@ -11,8 +11,8 @@ lr_scheduler_type: cosine
 max_grad_norm: 1.0
 
 lora:
-  r: 64
-  alpha: 128
+  r: 16
+  alpha: 32
   dropout: 0.05
   target_modules:
     - q_proj
@@ -21,16 +21,17 @@ lora:
     - o_proj
 
 checkpoint:
-  output_dir: checkpoints/lora_ft
+  output_dir: checkpoints/lora_ft_fast
   save_strategy: steps
-  save_steps: 100
+  save_steps: 250
+  eval_steps: 250
   save_total_limit: 5
   load_best_model_at_end: true
   metric_for_best_model: eval_loss
   greater_is_better: false
 
 logging:
-  logging_steps: 25
+  logging_steps: 5
   report_to:
     - tensorboard
     - wandb

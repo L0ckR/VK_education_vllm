@@ -1,0 +1,13 @@
+experiment_name: gqa_ru_qwen35_0_8b_lora_v1
+seed: 42
+
+data_config: configs/data/gqa_ru.yaml
+model_config: configs/model/qwen35_0_8b.yaml
+train_config: configs/train/lora_ft.yaml
+eval_config: configs/eval/default.yaml
+inference_config: configs/inference/default.yaml
+
+run:
+  output_dir: runs/gqa_ru_qwen35_0_8b_lora_v1
+  checkpoint_dir: checkpoints/gqa_ru_qwen35_0_8b_lora_v1
+  eval_metric: accuracy

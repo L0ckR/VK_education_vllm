@@ -16,8 +16,7 @@
 
 ## 3. Используемые открытые данные VK и как они применяются
 
-Источник: коллекция DeepVK на Hugging Face
-`deepvk/vision-language-modeling-664dd7e4c257cc78e740f6bc`.
+Источник: датасеты DeepVK на Hugging Face, в частности `deepvk/GQA-ru` и `deepvk/MMBench-ru`.
 
 ### 3.1 GQA-ru
 - Роль: валидация качества визуального question answering на русском языке.

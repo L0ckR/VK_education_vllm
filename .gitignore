@@ -215,3 +215,5 @@ artifacts/
 checkpoints/
 outputs/
 wandb/
+data/gqa_ru/
+data/mmbench_ru/

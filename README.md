@@ -35,16 +35,88 @@ pip install -U pip
 pip install -e .
 ```
 
-## Быстрый запуск (без фактического обучения)
+Альтернатива через `uv`:
+
+```bash
+uv sync
+```
+
+## Формат JSONL для обучения
+
+Каждая строка должна быть JSON-объектом как минимум с вопросом, ответом и путём к изображению.
+Поддерживаются ключи изображения: `image`, `image_path`, `image_file`, `image_filename`.
+
+```json
+{"image": "000123.jpg", "question": "Что изображено на картинке?", "answer": "Красный автобус"}
+```
+
+Путь к изображению резолвится относительно `image_root` из `configs/data/*.yaml`.
+
+## Подготовка DeepVK GQA-ru
+
+Сначала можно скачать весь dataset repository локально:
+
+```bash
+python3 scripts/download_gqa_ru_snapshot.py \
+  --output-dir data/raw/hf_gqa_ru_snapshot
+```
+
+После этого собрать локальный train/val/test из скачанного snapshot:
+
+```bash
+python3 scripts/prepare_gqa_ru_dataset.py \
+  --output-root data/gqa_ru \
+  --source-dir data/raw/hf_gqa_ru_snapshot \
+  --val-size 0.05 \
+  --answer-field answer
+```
+
+Скрипт читает parquet из локального snapshot, сохраняет изображения в
+`data/gqa_ru/images/` и собирает:
+- `data/gqa_ru/train.jsonl`
+- `data/gqa_ru/val.jsonl`
+- `data/gqa_ru/test.jsonl`
+
+Для быстрого smoke-run можно ограничить объём:
+
+```bash
+python3 scripts/prepare_gqa_ru_dataset.py \
+  --source-dir data/raw/hf_gqa_ru_snapshot \
+  --train-max-images 20 \
+  --test-max-images 10 \
+  --train-max-samples 100 \
+  --test-max-samples 50
+```
+
+## Запуск обучения
 
 ```bash
 ./scripts/train.sh --config configs/experiments/gqa_ru_qwen25vl_lora_v1.yaml
-./scripts/eval.sh --config configs/experiments/gqa_ru_qwen25vl_lora_v1.yaml
-./scripts/predict.sh --config configs/experiments/gqa_ru_qwen25vl_lora_v1.yaml
 ```
 
-> Эти команды сейчас валидируют аргументы и конфиги, но не запускают тяжёлое обучение. Реальный запуск
-> предполагается на машине с GPU.
+Полный пример:
+
+```bash
+./scripts/train.sh \
+  --config configs/experiments/gqa_ru_qwen25vl_lora_v1.yaml \
+  --device cuda:0 \
+  --output-dir checkpoints/gqa_ru_qwen25vl_lora_v1
+```
+
+Скрипт загружает `Qwen/Qwen2.5-VL-3B-Instruct`, применяет LoRA из `configs/train/lora_ft.yaml`,
+читает JSONL-манифесты и запускает `transformers.Trainer`.
+
+Быстрый вариант для прогона и отладки:
+
+```bash
+python3 scripts/train.py \
+  --config configs/experiments/gqa_ru_qwen35_0_8b_lora_fast_v1.yaml \
+  --device cuda:0 \
+  --output-dir checkpoints/gqa_ru_qwen35_0_8b_lora_fast_v1
+```
+
+Этот вариант использует меньшую модель, `max_seq_length: 1024`, `image_resolution: 336`,
+LoRA `r: 16` и `1` эпоху.
 
 ## Проверка согласованности репозитория
 

@@ -1,0 +1,6 @@
+name: qwen35_0_8b
+model_name_or_path: Qwen/Qwen3.5-0.8B
+processor_name_or_path: Qwen/Qwen3.5-0.8B
+trust_remote_code: true
+max_seq_length: 2048
+image_resolution: 448

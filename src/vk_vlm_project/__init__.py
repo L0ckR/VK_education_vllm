@@ -1,5 +1,5 @@
 """Top-level package for vk_vlm_project."""
 
-from .config import ProjectConfig
+from .config import ExperimentConfig, load_experiment_config
 
-__all__ = ["ProjectConfig"]
+__all__ = ["ExperimentConfig", "load_experiment_config"]
