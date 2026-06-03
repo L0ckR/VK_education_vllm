@@ -3,6 +3,8 @@
 **HF artifact:** https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
 **Best run:** `gqa_ru_qwen35_0_8b_lora_fast_v1`, LoRA adapter, best checkpoint `checkpoint-4560`,
 `eval_loss=0.4337001144886017`.
+**Real evaluation:** adapter improves text QA validation answer loss by `50.98%`
+(`5.1697 -> 2.5340`) vs the original `Qwen/Qwen3.5-0.8B` on 200 GQA-ru validation samples.
 
 Репозиторий подготовлен под проект VK Education по обучению и оценке VLM-моделей на открытых
 данных VK (коллекция DeepVK на Hugging Face), включая бенчмарки **GQA-ru** и **MMBench-ru**.
@@ -45,12 +47,16 @@ https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
 - train/val: 38 019 / 1 981 примеров;
 - лучший checkpoint: `checkpoint-4560`;
 - итоговые training metrics: `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/train_metrics.json`;
+- сравнение с оригинальной моделью:
+  `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_200/val_evaluation_metrics.json`;
+- prediction smoke-test:
+  `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/`;
 - сводка: `reports/benchmark_summary.json`;
 - итоговый отчет: `reports/final_report.md`.
 
-Важно: текущий репозиторий содержит обучение и loss-based validation. Полноценный evaluator для
-GQA-ru/MMBench-ru accuracy в `scripts/eval.py` пока не реализован, поэтому `eval_loss` не следует
-трактовать как финальный leaderboard-score.
+Важно: текущая реализация оценивает текстовый QA-прокси по вопросам GQA-ru без передачи изображения
+в модель, потому что обученный checkpoint является `CAUSAL_LM` LoRA-адаптером. Это честное сравнение
+с исходной base model, но не замена полному мультимодальному leaderboard-прогону.
 
 ## Установка
 
@@ -151,3 +157,18 @@ python scripts/check_repo_consistency.py
 ```
 
 Скрипт проверяет наличие обязательных папок/документов и корректность ссылок на конфиги в experiment YAML.
+
+## Запуск реальной оценки
+
+```bash
+python3 scripts/eval.py \
+  --config configs/experiments/gqa_ru_qwen35_0_8b_lora_fast_v1.yaml \
+  --resume checkpoints/gqa_ru_qwen35_0_8b_lora_fast_v1 \
+  --split val \
+  --max-samples 200 \
+  --compare-base \
+  --no-generate
+```
+
+Для генеративной smoke-оценки с prediction JSONL уберите `--no-generate` и задайте меньший
+`--max-samples`, например `50`.

@@ -42,9 +42,34 @@
     "eval_samples_per_second": 17.075,
     "eval_steps_per_second": 1.069
   },
+  "evaluation": {
+    "protocol": "Text QA proxy evaluation on GQA-ru validation questions. The original base model and the LoRA adapter are evaluated on the same samples.",
+    "loss_eval_200": {
+      "split": "val",
+      "samples": 200,
+      "base_answer_loss": 5.169734188625889,
+      "adapter_answer_loss": 2.53404495023912,
+      "base_answer_perplexity": 175.8680835335284,
+      "adapter_answer_perplexity": 12.604387280790764,
+      "answer_loss_relative_improvement": 0.5098307073863952,
+      "metrics_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_200/val_evaluation_metrics.json"
+    },
+    "generation_eval_50": {
+      "split": "val",
+      "samples": 50,
+      "base_exact_match": 0.18,
+      "adapter_exact_match": 0.36,
+      "exact_match_delta": 0.18,
+      "base_token_f1": 0.2,
+      "adapter_token_f1": 0.36,
+      "metrics_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/val_evaluation_metrics.json",
+      "base_predictions_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/val_base_predictions.jsonl",
+      "adapter_predictions_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/val_adapter_predictions.jsonl"
+    }
+  },
   "limitations": [
-    "scripts/eval.py currently does not implement full GQA-ru/MMBench-ru generative benchmark scoring.",
-    "Reported metric is validation loss from Trainer, not leaderboard accuracy.",
+    "The implemented evaluator is a text QA proxy over GQA-ru questions; images are not passed to the model because this checkpoint is a CAUSAL_LM LoRA adapter.",
+    "Reported evaluation is a real base-vs-adapter comparison but not a full multimodal leaderboard score.",
     "MMBench-ru was documented and configured but not measured in the available run artifacts."
   ]
 }

@@ -36,6 +36,24 @@
 - best validation loss: `0.4337001144886017`;
 - HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora.
 
+### 4.1 Реальная оценка
+
+Добавлен evaluator в `scripts/eval.py` / `src/vk_vlm_project/evaluate.py`.
+
+Поддерживаемые режимы:
+- teacher-forced answer loss/perplexity;
+- генеративный exact match и token F1;
+- сравнение исходной base model и LoRA-адаптера через `--compare-base`;
+- сохранение `metrics.json` и `predictions.jsonl`.
+
+Фактическое сравнение с оригинальной моделью:
+
+| Прогон | Base | Adapter | Улучшение |
+|---|---:|---:|---:|
+| answer loss, val 200 | 5.169734188625889 | 2.53404495023912 | 50.98% |
+| exact match, val 50 | 0.18 | 0.36 | +0.18 |
+| token F1, val 50 | 0.20 | 0.36 | +0.16 |
+
 ## 5. Что сдаётся как результат
 
 - обученная модель или LoRA-адаптер;
@@ -50,6 +68,7 @@
 - есть материалы по обученной модели;
 - есть отдельный файл с подробным описанием решения.
 
-Ограничение текущей версии: `scripts/eval.py` пока не реализует генеративную оценку accuracy для
-GQA-ru/MMBench-ru. Поэтому сохраненный результат следует считать обученным baseline-адаптером с
-loss-based validation, а не финальным leaderboard submission.
+Ограничение текущей версии: evaluator является текстовым QA-прокси без передачи изображения в
+модель, потому что доступный checkpoint сохранен как `CAUSAL_LM` LoRA-адаптер. Результат является
+реальным сравнением adapter vs original base model, но не финальным мультимодальным leaderboard
+submission.

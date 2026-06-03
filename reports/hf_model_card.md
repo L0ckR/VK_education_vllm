@@ -51,6 +51,8 @@ VK/DeepVK GQA-ru.
 
 ## Метрики
 
+Training metrics:
+
 | Metric | Value |
 |---|---:|
 | train_loss | 0.04432422036801592 |
@@ -59,8 +61,17 @@ VK/DeepVK GQA-ru.
 | train_samples_per_second | 6.113 |
 | eval_samples_per_second | 17.075 |
 
-Ограничение: сохраненная метрика является validation loss от `transformers.Trainer`. Полный
-benchmark scoring для GQA-ru/MMBench-ru accuracy в текущем репозитории еще не реализован.
+Base-vs-adapter text QA proxy evaluation on GQA-ru validation:
+
+| Metric | Base `Qwen/Qwen3.5-0.8B` | LoRA adapter |
+|---|---:|---:|
+| Answer loss, 200 val samples | 5.169734188625889 | 2.53404495023912 |
+| Answer perplexity, 200 val samples | 175.8680835335284 | 12.604387280790764 |
+| Exact match, 50 val samples | 0.18 | 0.36 |
+| Token F1, 50 val samples | 0.20 | 0.36 |
+
+Ограничение: это текстовая QA-оценка по вопросам GQA-ru без image input. Она показывает реальное
+улучшение адаптера относительно исходной модели, но не является полным VLM leaderboard score.
 
 ## Использование
 
