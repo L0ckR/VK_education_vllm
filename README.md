@@ -1,15 +1,19 @@
 # VK Education: Vision-Language Modeling проект
 
+**HF artifact:** https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
+**Best run:** `gqa_ru_qwen35_0_8b_lora_fast_v1`, LoRA adapter, best checkpoint `checkpoint-4560`,
+`eval_loss=0.4337001144886017`.
+
 Репозиторий подготовлен под проект VK Education по обучению и оценке VLM-моделей на открытых
 данных VK (коллекция DeepVK на Hugging Face), включая бенчмарки **GQA-ru** и **MMBench-ru**.
 
 ## Цель репозитория
 
-Дать воспроизводимый каркас проекта, где:
+Дать воспроизводимый проект, где:
 - основной Python-код и утилиты находятся в `src/`;
 - запуск выполняется через скрипты в `scripts/`;
 - параметры экспериментов зафиксированы в `configs/`;
-- описание проекта и артефактов оформлено в `docs/`;
+- описание проекта, модели и артефактов оформлено в `docs/` и `reports/`;
 - структура для данных и исследований (EDA) выделена в `data/` и `notebooks/`.
 
 ## Структура
@@ -23,8 +27,30 @@
 - `configs/experiments/` — experiment-level YAML, объединяющие model/data/train/eval.
 - `scripts/` — скрипты запуска train/eval/predict и проверок согласованности.
 - `docs/` — постановка проекта, runbook, шаблон и подробное описание решения.
+- `reports/` — итоговый отчет и machine-readable summary метрик.
 - `data/` — структура для манифестов/примеров без тяжёлых артефактов.
 - `notebooks/eda/` — место для исследовательских ноутбуков и EDA.
+
+## Итоговый артефакт
+
+Опубликован LoRA-адаптер:
+https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
+
+Автор проекта: Ибрагимов Далгат Магомедалиевич, МАИ институт 8, группа М8О-308Б-32.
+
+Фактический запуск:
+- данные: `deepvk/GQA-ru`, подготовлены в локальные JSONL-манифесты и изображения;
+- модель: `Qwen/Qwen3.5-0.8B`;
+- метод: LoRA fine-tuning, `r=16`, `alpha=32`, `dropout=0.05`;
+- train/val: 38 019 / 1 981 примеров;
+- лучший checkpoint: `checkpoint-4560`;
+- итоговые training metrics: `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/train_metrics.json`;
+- сводка: `reports/benchmark_summary.json`;
+- итоговый отчет: `reports/final_report.md`.
+
+Важно: текущий репозиторий содержит обучение и loss-based validation. Полноценный evaluator для
+GQA-ru/MMBench-ru accuracy в `scripts/eval.py` пока не реализован, поэтому `eval_loss` не следует
+трактовать как финальный leaderboard-score.
 
 ## Установка
 

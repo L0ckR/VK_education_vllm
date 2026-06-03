@@ -2,8 +2,8 @@
 
 ## 1. Контекст
 
-Проект выполняется на открытых данных VK (DeepVK VLM collection) с целью получить сильный baseline
-и улучшения на GQA-ru/MMBench-ru для русскоязычного мультимодального понимания.
+Проект выполняется на открытых данных VK (DeepVK VLM collection) с целью получить
+воспроизводимый baseline на GQA-ru для русскоязычного question answering по изображениям.
 
 ## 2. Архитектура решения
 
@@ -24,14 +24,23 @@
 
 1. Выбирается experiment-конфиг (`gqa_ru_*` или `mmbench_ru_*`).
 2. Подгружаются ссылки на model/data/train/eval/inference конфиги.
-3. На GPU запускается train, затем eval/predict.
-4. Метрики и артефакты сохраняются в `outputs/` и/или `checkpoints/`.
+3. На GPU запускается train.
+4. Метрики и артефакты сохраняются в `runs/` и `checkpoints/`.
+
+Фактический обученный запуск:
+- experiment: `gqa_ru_qwen35_0_8b_lora_fast_v1`;
+- base model: `Qwen/Qwen3.5-0.8B`;
+- данные: `deepvk/GQA-ru`, 38 019 train и 1 981 validation примеров;
+- LoRA: `r=16`, `alpha=32`, `dropout=0.05`;
+- лучший checkpoint: `checkpoint-4560`;
+- best validation loss: `0.4337001144886017`;
+- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora.
 
 ## 5. Что сдаётся как результат
 
 - обученная модель или LoRA-адаптер;
-- таблицы метрик по двум бенчмаркам;
-- заполненный отчёт (`docs/final_report_template.md`);
+- таблица фактических метрик обучения и validation loss;
+- заполненный отчёт (`reports/final_report.md`);
 - (опционально) презентация с ключевыми выводами.
 
 ## 6. Критерии готовности
@@ -40,3 +49,7 @@
 - явно описано использование открытых данных VK;
 - есть материалы по обученной модели;
 - есть отдельный файл с подробным описанием решения.
+
+Ограничение текущей версии: `scripts/eval.py` пока не реализует генеративную оценку accuracy для
+GQA-ru/MMBench-ru. Поэтому сохраненный результат следует считать обученным baseline-адаптером с
+loss-based validation, а не финальным leaderboard submission.

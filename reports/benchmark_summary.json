@@ -1,0 +1,50 @@
+{
+  "project": "VK Education Vision-Language Modeling",
+  "author": {
+    "name": "Ибрагимов Далгат Магомедалиевич",
+    "institution": "МАИ, институт 8",
+    "group": "М8О-308Б-32"
+  },
+  "hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora",
+  "best_run": "gqa_ru_qwen35_0_8b_lora_fast_v1",
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "adapter_type": "LoRA",
+  "dataset": {
+    "name": "deepvk/GQA-ru",
+    "source": "https://huggingface.co/datasets/deepvk/GQA-ru",
+    "train_samples": 38019,
+    "validation_samples": 1981,
+    "test_samples": 12216,
+    "usage": "Train/validation split for Russian visual question answering fine-tuning."
+  },
+  "training": {
+    "seed": 42,
+    "epochs": 1.0,
+    "batch_size": 8,
+    "learning_rate": 0.0002,
+    "mixed_precision": "bf16",
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+    "best_checkpoint": "checkpoint-4560",
+    "best_metric_name": "eval_loss",
+    "best_metric_value": 0.4337001144886017
+  },
+  "train_metrics": {
+    "train_runtime": 6219.1947,
+    "train_samples_per_second": 6.113,
+    "train_steps_per_second": 0.764,
+    "train_loss": 0.04432422036801592,
+    "epoch": 1.0,
+    "eval_loss": 0.4337001144886017,
+    "eval_runtime": 116.0177,
+    "eval_samples_per_second": 17.075,
+    "eval_steps_per_second": 1.069
+  },
+  "limitations": [
+    "scripts/eval.py currently does not implement full GQA-ru/MMBench-ru generative benchmark scoring.",
+    "Reported metric is validation loss from Trainer, not leaderboard accuracy.",
+    "MMBench-ru was documented and configured but not measured in the available run artifacts."
+  ]
+}
