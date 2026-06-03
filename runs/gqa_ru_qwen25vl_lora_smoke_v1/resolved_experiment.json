@@ -1,0 +1,85 @@
+{
+  "experiment_name": "gqa_ru_qwen25vl_lora_smoke_v1",
+  "seed": 42,
+  "data": {
+    "name": "gqa_ru",
+    "train_path": "data/gqa_ru/train.jsonl",
+    "val_path": "data/gqa_ru/val.jsonl",
+    "test_path": "data/gqa_ru/test.jsonl",
+    "image_root": "data/gqa_ru/images",
+    "question_field": "question",
+    "answer_field": "answer",
+    "metric_primary": "accuracy"
+  },
+  "model": {
+    "name": "qwen25vl_3b_fast",
+    "model_name_or_path": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "processor_name_or_path": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "trust_remote_code": true,
+    "max_seq_length": 1024,
+    "image_resolution": 336
+  },
+  "train": {
+    "name": "lora_ft_vlm_smoke",
+    "seed": 42,
+    "mixed_precision": "bf16",
+    "batch_size": 1,
+    "grad_accumulation_steps": 16,
+    "num_train_epochs": 1.0,
+    "learning_rate": 0.0002,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.03,
+    "lr_scheduler_type": "cosine",
+    "max_grad_norm": 1.0,
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj"
+      ]
+    },
+    "checkpoint": {
+      "output_dir": "checkpoints/lora_ft_vlm_smoke",
+      "save_strategy": "steps",
+      "save_steps": 50,
+      "eval_steps": 50,
+      "save_total_limit": 2,
+      "load_best_model_at_end": true,
+      "metric_for_best_model": "eval_loss",
+      "greater_is_better": false
+    },
+    "logging": {
+      "logging_steps": 5,
+      "report_to": [
+        "tensorboard"
+      ]
+    },
+    "max_train_samples": 1000,
+    "max_eval_samples": 100,
+    "gradient_checkpointing": true
+  },
+  "eval": {
+    "batch_size": 16,
+    "max_new_tokens": 32
+  },
+  "inference": {
+    "batch_size": 8,
+    "max_new_tokens": 64
+  },
+  "run": {
+    "output_dir": "runs/gqa_ru_qwen25vl_lora_smoke_v1",
+    "checkpoint_dir": "checkpoints/gqa_ru_qwen25vl_lora_smoke_v1",
+    "eval_metric": "exact_match"
+  },
+  "raw_paths": {
+    "data_config": "configs/data/gqa_ru.yaml",
+    "model_config": "configs/model/qwen25vl_3b_fast.yaml",
+    "train_config": "configs/train/lora_ft_vlm_smoke.yaml",
+    "eval_config": "configs/eval/default.yaml",
+    "inference_config": "configs/inference/default.yaml"
+  }
+}

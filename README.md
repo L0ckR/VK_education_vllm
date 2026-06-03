@@ -1,10 +1,11 @@
 # VK Education: Vision-Language Modeling проект
 
-**HF artifact:** https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
-**Best run:** `gqa_ru_qwen35_0_8b_lora_fast_v1`, LoRA adapter, best checkpoint `checkpoint-4560`,
-`eval_loss=0.4337001144886017`.
-**Real evaluation:** adapter improves text QA validation answer loss by `50.98%`
-(`5.1697 -> 2.5340`) vs the original `Qwen/Qwen3.5-0.8B` on 200 GQA-ru validation samples.
+**HF artifact:** https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke
+**Best VLM run:** `gqa_ru_qwen25vl_lora_smoke_v1`, LoRA adapter for
+`Qwen/Qwen2.5-VL-3B-Instruct`, `eval_loss=0.47339919209480286`.
+**Official benchmark smoke:** `lmms-eval` task `gqa-ru`, `deepvk/GQA-ru`
+`testdev_balanced_instructions`, `limit=100`: ExactMatch improved from `0.39` to `0.48`
+(+0.09 absolute, +23.1% relative) versus the original VLM.
 
 Репозиторий подготовлен под проект VK Education по обучению и оценке VLM-моделей на открытых
 данных VK (коллекция DeepVK на Hugging Face), включая бенчмарки **GQA-ru** и **MMBench-ru**.
@@ -35,28 +36,27 @@
 
 ## Итоговый артефакт
 
-Опубликован LoRA-адаптер:
-https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
+Опубликован основной LoRA-адаптер для настоящей VLM:
+https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke
 
 Автор проекта: Ибрагимов Далгат Магомедалиевич, МАИ институт 8, группа М8О-308Б-32.
 
 Фактический запуск:
 - данные: `deepvk/GQA-ru`, подготовлены в локальные JSONL-манифесты и изображения;
-- модель: `Qwen/Qwen3.5-0.8B`;
+- модель: `Qwen/Qwen2.5-VL-3B-Instruct`;
 - метод: LoRA fine-tuning, `r=16`, `alpha=32`, `dropout=0.05`;
-- train/val: 38 019 / 1 981 примеров;
-- лучший checkpoint: `checkpoint-4560`;
-- итоговые training metrics: `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/train_metrics.json`;
-- сравнение с оригинальной моделью:
-  `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_200/val_evaluation_metrics.json`;
-- prediction smoke-test:
-  `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/`;
+- train/val в smoke-обучении: 1 000 / 100 примеров из GQA-ru;
+- итоговые training metrics: `runs/gqa_ru_qwen25vl_lora_smoke_v1/train_metrics.json`;
+- официальный benchmark smoke-test:
+  `runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100/artifacts__merged_qwen25vl_gqa_ru_smoke/`;
+- baseline на той же выборке:
+  `runs/lmms_eval/gqa_ru_qwen25vl_base_limit100/Qwen__Qwen2.5-VL-3B-Instruct/`;
 - сводка: `reports/benchmark_summary.json`;
 - итоговый отчет: `reports/final_report.md`.
 
-Важно: текущая реализация оценивает текстовый QA-прокси по вопросам GQA-ru без передачи изображения
-в модель, потому что обученный checkpoint является `CAUSAL_LM` LoRA-адаптером. Это честное сравнение
-с исходной base model, но не замена полному мультимодальному leaderboard-прогону.
+Важно: `lmms-eval --limit 100` используется как ограниченный официальный smoke-прогон, а не как
+полный leaderboard score. При этом сравнение выполнено на одной и той же official task
+конфигурации `gqa-ru` и показывает улучшение относительно исходной VLM.
 
 ## Установка
 
@@ -142,13 +142,13 @@ python3 scripts/prepare_gqa_ru_dataset.py \
 
 ```bash
 python3 scripts/train.py \
-  --config configs/experiments/gqa_ru_qwen35_0_8b_lora_fast_v1.yaml \
+  --config configs/experiments/gqa_ru_qwen25vl_lora_smoke_v1.yaml \
   --device cuda:0 \
-  --output-dir checkpoints/gqa_ru_qwen35_0_8b_lora_fast_v1
+  --output-dir checkpoints/gqa_ru_qwen25vl_lora_smoke_v1
 ```
 
-Этот вариант использует меньшую модель, `max_seq_length: 1024`, `image_resolution: 336`,
-LoRA `r: 16` и `1` эпоху.
+Этот вариант использует настоящую VLM `Qwen/Qwen2.5-VL-3B-Instruct`, `max_seq_length: 1024`,
+`image_resolution: 336`, LoRA `r: 16` и ограничение `max_train_samples: 1000`.
 
 ## Проверка согласованности репозитория
 
@@ -172,3 +172,22 @@ python3 scripts/eval.py \
 
 Для генеративной smoke-оценки с prediction JSONL уберите `--no-generate` и задайте меньший
 `--max-samples`, например `50`.
+
+## Официальный benchmark smoke через lmms-eval
+
+```bash
+python -m lmms_eval eval \
+  --model qwen2_5_vl \
+  --model_args pretrained=Qwen/Qwen2.5-VL-3B-Instruct \
+  --tasks gqa-ru \
+  --batch_size 1 \
+  --limit 100 \
+  --log_samples \
+  --output_path runs/lmms_eval/gqa_ru_qwen25vl_base_limit100 \
+  --device cuda:0 \
+  --trust_remote_code
+```
+
+Для адаптера перед оценкой LoRA была смержена с базовой VLM в локальный ignored-артефакт
+`artifacts/merged_qwen25vl_gqa_ru_smoke`, после чего запущена та же команда с
+`--model_args pretrained=artifacts/merged_qwen25vl_gqa_ru_smoke`.

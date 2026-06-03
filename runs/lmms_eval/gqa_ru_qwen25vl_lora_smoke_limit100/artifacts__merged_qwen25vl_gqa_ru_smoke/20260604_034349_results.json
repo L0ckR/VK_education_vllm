@@ -1,0 +1,206 @@
+{
+  "results": {
+    "gqa-ru": {
+      "alias": "gqa-ru",
+      "exact_match,none": 0.48,
+      "exact_match_stderr,none": 0.050211673156867795,
+      "exact_match_stderr_clt,none": 0.05021167315686782,
+      "exact_match_stderr_clustered,none": "N/A"
+    }
+  },
+  "group_subtasks": {
+    "gqa-ru": []
+  },
+  "configs": {
+    "gqa-ru": {
+      "task": "gqa-ru",
+      "dataset_path": "deepvk/GQA-ru",
+      "dataset_name": "testdev_balanced_instructions",
+      "dataset_kwargs": {
+        "token": true
+      },
+      "test_split": "testdev",
+      "full_docs": false,
+      "process_results_use_image": false,
+      "doc_to_visual": "<function gqa_doc_to_visual at 0x7963de536ac0>",
+      "doc_to_text": "<function gqa_doc_to_text at 0x7963de537420>",
+      "doc_to_target": "answer",
+      "description": "",
+      "target_delimiter": " ",
+      "fewshot_delimiter": "\n\n",
+      "num_fewshot": 0,
+      "metric_list": [
+        {
+          "metric": "exact_match",
+          "aggregation": "mean",
+          "higher_is_better": true,
+          "ignore_case": true,
+          "ignore_punctuation": true
+        }
+      ],
+      "output_type": "generate_until",
+      "generation_kwargs": {
+        "max_new_tokens": 16,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "num_beams": 1,
+        "do_sample": false,
+        "until": [
+          "\n\n"
+        ]
+      },
+      "repeats": 1,
+      "should_decontaminate": false,
+      "score_key": "score",
+      "metadata": [
+        {
+          "version": 0.0
+        }
+      ],
+      "lmms_eval_specific_kwargs": {
+        "default": {
+          "pre_prompt": "",
+          "post_prompt": "\nОтветь одним словом."
+        },
+        "pre_prompt": "",
+        "post_prompt": "\nОтветь одним словом."
+      }
+    }
+  },
+  "versions": {
+    "gqa-ru": "Yaml"
+  },
+  "n-shot": {
+    "gqa-ru": 0
+  },
+  "higher_is_better": {
+    "gqa-ru": {
+      "exact_match": true
+    }
+  },
+  "n-samples": {
+    "gqa-ru": {
+      "original": 12216,
+      "effective": 100
+    }
+  },
+  "config": {
+    "model": "qwen2_5_vl",
+    "model_args": "pretrained=artifacts/merged_qwen25vl_gqa_ru_smoke",
+    "batch_size": "1",
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "use_cache": null,
+    "limit": 100.0,
+    "offset": 0,
+    "bootstrap_iters": 100000,
+    "gen_kwargs": "",
+    "random_seed": 0,
+    "numpy_seed": 1234,
+    "torch_seed": 1234,
+    "fewshot_seed": 1234,
+    "resolved_cli_args": {
+      "config": "",
+      "model": "qwen2_5_vl",
+      "tasks": "gqa-ru",
+      "model_args": "pretrained=artifacts/merged_qwen25vl_gqa_ru_smoke",
+      "launcher_args": null,
+      "num_fewshot": null,
+      "batch_size": "1",
+      "max_batch_size": null,
+      "device": "cuda:0",
+      "output_path": "runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100",
+      "limit": 100.0,
+      "offset": 0,
+      "use_cache": null,
+      "cache_requests": null,
+      "check_integrity": false,
+      "write_out": false,
+      "log_samples": true,
+      "wandb_log_samples": false,
+      "log_samples_suffix": "model_outputs",
+      "system_instruction": null,
+      "apply_chat_template": false,
+      "fewshot_as_multiturn": false,
+      "show_config": false,
+      "include_path": null,
+      "gen_kwargs": "",
+      "reasoning_tags": "[[\"<think>\", \"</think>\"], [\"<analysis>\", \"</analysis>\"]]",
+      "verbosity": "INFO",
+      "wandb_args": "",
+      "timezone": "Asia/Singapore",
+      "hf_hub_log_args": ",output_path=runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100",
+      "predict_only": false,
+      "seed": [
+        0,
+        1234,
+        1234,
+        1234
+      ],
+      "trust_remote_code": true,
+      "process_with_media": false,
+      "agentic_trace_mode": "basic",
+      "force_simple": false,
+      "tui": false,
+      "repeats": 1,
+      "baseline": null,
+      "max_tokens": null,
+      "power_analysis": false,
+      "effect_size": 0.03,
+      "alpha": 0.05,
+      "power": 0.8,
+      "correlation": 0.5,
+      "std_a": null,
+      "std_b": null
+    }
+  },
+  "git_hash": "17a0092",
+  "git_branch": "HEAD",
+  "lmms_eval_version": "HEAD@17a0092",
+  "date": "20260604_034349",
+  "throughput": {
+    "total_gen_tokens": 344,
+    "total_elapsed_time": 29.631572484970093,
+    "avg_speed": 11.609238766335665,
+    "avg_rank": 0.0
+  },
+  "usage": {},
+  "efficiency": {
+    "by_task": {
+      "gqa-ru": {
+        "docs": 100.0,
+        "docs_with_token_counts": 100.0,
+        "total_input_tokens": 0.0,
+        "total_output_tokens": 344.0,
+        "total_tokens": 344.0,
+        "total_correct_score": 48.0,
+        "avg_output_tokens_per_sample": 3.44,
+        "tokens_per_correct_answer": 7.166666666666667
+      }
+    },
+    "overall": {
+      "docs": 100.0,
+      "docs_with_token_counts": 100.0,
+      "total_input_tokens": 0.0,
+      "total_output_tokens": 344.0,
+      "total_tokens": 344.0,
+      "total_correct_score": 48.0,
+      "avg_output_tokens_per_sample": 3.44,
+      "tokens_per_correct_answer": 7.166666666666667
+    }
+  },
+  "task_hashes": {
+    "gqa-ru": "be2f5d66ce49b6fe06c8bcda93d223c64132f082403f3a29556444c126126df3"
+  },
+  "model_source": "qwen2_5_vl",
+  "model_name": "artifacts/merged_qwen25vl_gqa_ru_smoke",
+  "model_name_sanitized": "artifacts__merged_qwen25vl_gqa_ru_smoke",
+  "system_instruction": null,
+  "system_instruction_sha": null,
+  "fewshot_as_multiturn": false,
+  "chat_template": null,
+  "chat_template_sha": null,
+  "start_time": 55385.879913781,
+  "end_time": 55473.82993844,
+  "total_evaluation_time_seconds": "87.95002465900325"
+}

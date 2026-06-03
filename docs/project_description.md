@@ -10,8 +10,8 @@
 
 1. Подготовить воспроизводимый ML-каркас (структура, конфиги, скрипты, документация).
 2. Задокументировать использование открытых данных VK из коллекции DeepVK VLM.
-3. Обучить baseline-конфигурацию LoRA для модели.
-4. Реализовать сравнение LoRA-адаптера с оригинальной base model на GQA-ru validation split.
+3. Обучить baseline-конфигурацию LoRA для настоящей VLM.
+4. Реализовать сравнение LoRA-адаптера с оригинальной VLM через официальный GQA-ru benchmark.
 5. Подготовить итоговые артефакты: описание модели, метрики, отчёт, ссылку на HF-адаптер.
 
 ## 3. Используемые открытые данные VK и как они применяются
@@ -24,7 +24,9 @@
   - train/val/test манифесты в `data/gqa_ru/`;
   - конфиг датасета — `configs/data/gqa_ru.yaml`;
   - эксперимент — `configs/experiments/gqa_ru_qwen25vl_lora_v1.yaml`.
-  - фактический запуск — `configs/experiments/gqa_ru_qwen35_0_8b_lora_fast_v1.yaml`.
+  - фактический основной запуск — `configs/experiments/gqa_ru_qwen25vl_lora_smoke_v1.yaml`;
+  - официальный benchmark smoke — `lmms-eval` task `gqa-ru`,
+    subset `testdev_balanced_instructions`, split `testdev`, metric `exact_match`.
 
 ### 3.2 MMBench-ru
 - Роль: бенчмарк общего мультимодального понимания на русском.
@@ -37,18 +39,18 @@
 
 ## 4. Планируемая модель и подход
 
-- Плановая VLM-база: `Qwen/Qwen2.5-VL-3B-Instruct` (см. `configs/model/base_vlm.yaml`).
-- Фактический быстрый запуск: `Qwen/Qwen3.5-0.8B` (см. `configs/model/qwen35_0_8b_fast.yaml`).
-- Метод: parameter-efficient дообучение через LoRA (см. `configs/train/lora_ft_fast.yaml`).
+- Основная VLM-база: `Qwen/Qwen2.5-VL-3B-Instruct`
+  (см. `configs/model/qwen25vl_3b_fast.yaml`).
+- Метод: parameter-efficient дообучение через LoRA (см. `configs/train/lora_ft_vlm_smoke.yaml`).
 - Целевые метрики:
-  - GQA-ru: `accuracy`;
+  - GQA-ru: official `exact_match` из `lmms-eval`;
   - MMBench-ru: `mmbench_score`;
-  - дополнительные: exact_match, macro-F1.
+  - дополнительные: validation loss, token-level diagnostics.
 
 ## 5. Ожидаемый результат
 
 1. Обученный LoRA-адаптер с воспроизводимыми конфигами.
-2. Таблица training/evaluation loss и base-vs-adapter comparison для GQA-ru.
+2. Таблица training/evaluation loss и official base-vs-adapter comparison для GQA-ru.
 3. Подробный отчёт (метод, данные, эксперименты, ошибки, ограничения).
 4. Дополнительные материалы: презентация и инструкции по запуску.
 
@@ -58,15 +60,15 @@
 - Набор конфигов для train/eval/inference и экспериментов.
 - Скрипты запуска, которые можно выполнить на GPU-машине без изменения структуры.
 - Документация под финальную сдачу проекта.
-- Фактические метрики запуска в `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/`.
-- Реальная оценка в `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_200/`:
-  answer loss улучшен на 50.98% относительно оригинальной модели.
+- Фактические метрики VLM-обучения в `runs/gqa_ru_qwen25vl_lora_smoke_v1/`.
+- Официальная GQA-ru smoke-оценка через `lmms-eval` в `runs/lmms_eval/`:
+  ExactMatch улучшен с `0.39` до `0.48` на одинаковых 100 testdev примерах.
 - Итоговый отчет в `reports/final_report.md`.
-- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora.
+- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke.
 
-## 7. Следующий шаг (на вашей машине с GPU)
+## 7. Следующий шаг
 
-1. Подготовить окружение и зависимости.
-2. Скачать датасеты из коллекции VK/DeepVK и сформировать локальные манифесты.
-3. Запустить обучение через `scripts/train.sh` с нужным experiment-конфигом.
-4. Запустить оценку и сохранить метрики в отчёт.
+1. Прогнать `lmms-eval gqa-ru` без `--limit` для leaderboard-grade результата.
+2. Прогнать `mmbench_ru_dev`.
+3. Расширить обучение за пределы smoke-режима: больше train samples и подбор LoRA-гиперпараметров.
+4. Сохранить полный набор benchmark logs в `runs/lmms_eval/` и обновить итоговый отчёт.

@@ -5,71 +5,98 @@
     "institution": "МАИ, институт 8",
     "group": "М8О-308Б-32"
   },
-  "hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora",
-  "best_run": "gqa_ru_qwen35_0_8b_lora_fast_v1",
-  "base_model": "Qwen/Qwen3.5-0.8B",
+  "hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke",
+  "best_run": "gqa_ru_qwen25vl_lora_smoke_v1",
+  "base_model": "Qwen/Qwen2.5-VL-3B-Instruct",
   "adapter_type": "LoRA",
   "dataset": {
     "name": "deepvk/GQA-ru",
     "source": "https://huggingface.co/datasets/deepvk/GQA-ru",
-    "train_samples": 38019,
-    "validation_samples": 1981,
-    "test_samples": 12216,
-    "usage": "Train/validation split for Russian visual question answering fine-tuning."
+    "train_samples_available": 38019,
+    "validation_samples_available": 1981,
+    "test_samples_available": 12216,
+    "train_samples_used": 1000,
+    "validation_samples_used": 100,
+    "usage": "Open VK/DeepVK GQA-ru data was used for VLM LoRA fine-tuning and official lmms-eval GQA-ru smoke evaluation."
   },
   "training": {
     "seed": 42,
     "epochs": 1.0,
-    "batch_size": 8,
+    "batch_size": 1,
+    "gradient_accumulation_steps": 16,
     "learning_rate": 0.0002,
     "mixed_precision": "bf16",
+    "gradient_checkpointing": true,
+    "max_seq_length": 1024,
+    "image_resolution": 336,
     "lora_r": 16,
     "lora_alpha": 32,
     "lora_dropout": 0.05,
-    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
-    "best_checkpoint": "checkpoint-4560",
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ],
+    "checkpoint_dir": "checkpoints/gqa_ru_qwen25vl_lora_smoke_v1",
     "best_metric_name": "eval_loss",
-    "best_metric_value": 0.4337001144886017
+    "best_metric_value": 0.47339919209480286
   },
   "train_metrics": {
-    "train_runtime": 6219.1947,
-    "train_samples_per_second": 6.113,
-    "train_steps_per_second": 0.764,
-    "train_loss": 0.04432422036801592,
+    "train_runtime": 714.4626,
+    "train_samples_per_second": 1.4,
+    "train_steps_per_second": 0.088,
+    "total_flos": 3775367685931008.0,
+    "train_loss": 0.6548236324673608,
     "epoch": 1.0,
-    "eval_loss": 0.4337001144886017,
-    "eval_runtime": 116.0177,
-    "eval_samples_per_second": 17.075,
-    "eval_steps_per_second": 1.069
+    "eval_loss": 0.47339919209480286,
+    "eval_runtime": 14.1628,
+    "eval_samples_per_second": 7.061,
+    "eval_steps_per_second": 0.494,
+    "metrics_path": "runs/gqa_ru_qwen25vl_lora_smoke_v1/train_metrics.json"
   },
-  "evaluation": {
-    "protocol": "Text QA proxy evaluation on GQA-ru validation questions. The original base model and the LoRA adapter are evaluated on the same samples.",
-    "loss_eval_200": {
-      "split": "val",
-      "samples": 200,
-      "base_answer_loss": 5.169734188625889,
-      "adapter_answer_loss": 2.53404495023912,
-      "base_answer_perplexity": 175.8680835335284,
-      "adapter_answer_perplexity": 12.604387280790764,
-      "answer_loss_relative_improvement": 0.5098307073863952,
-      "metrics_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_200/val_evaluation_metrics.json"
+  "official_benchmark_smoke": {
+    "runner": "lmms-eval",
+    "task": "gqa-ru",
+    "dataset_path": "deepvk/GQA-ru",
+    "dataset_name": "testdev_balanced_instructions",
+    "split": "testdev",
+    "metric": "exact_match",
+    "metric_higher_is_better": true,
+    "prompt_suffix": "Ответь одним словом.",
+    "limit_notice": "lmms-eval --limit was used for a bounded smoke comparison; this is not a full leaderboard score.",
+    "limit_20": {
+      "samples": 20,
+      "base_exact_match": 0.55,
+      "adapter_exact_match": 0.6,
+      "exact_match_delta": 0.05,
+      "base_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_base_limit20/Qwen__Qwen2.5-VL-3B-Instruct/20260604_030604_results.json",
+      "adapter_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit20/artifacts__merged_qwen25vl_gqa_ru_smoke/20260604_033600_results.json"
     },
-    "generation_eval_50": {
-      "split": "val",
-      "samples": 50,
-      "base_exact_match": 0.18,
-      "adapter_exact_match": 0.36,
-      "exact_match_delta": 0.18,
-      "base_token_f1": 0.2,
-      "adapter_token_f1": 0.36,
-      "metrics_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/val_evaluation_metrics.json",
-      "base_predictions_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/val_base_predictions.jsonl",
-      "adapter_predictions_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/eval_val_50_generate/val_adapter_predictions.jsonl"
+    "limit_100": {
+      "samples": 100,
+      "base_exact_match": 0.39,
+      "adapter_exact_match": 0.48,
+      "exact_match_delta": 0.09,
+      "relative_improvement": 0.23076923076923078,
+      "base_stderr": 0.04902071300001975,
+      "adapter_stderr": 0.050211673156867795,
+      "base_correct": 39,
+      "adapter_correct": 48,
+      "base_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_base_limit100/Qwen__Qwen2.5-VL-3B-Instruct/20260604_034100_results.json",
+      "adapter_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100/artifacts__merged_qwen25vl_gqa_ru_smoke/20260604_034349_results.json",
+      "base_samples_path": "runs/lmms_eval/gqa_ru_qwen25vl_base_limit100/Qwen__Qwen2.5-VL-3B-Instruct/20260604_034100_samples_gqa-ru.jsonl",
+      "adapter_samples_path": "runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100/artifacts__merged_qwen25vl_gqa_ru_smoke/20260604_034349_samples_gqa-ru.jsonl"
     }
   },
+  "previous_text_proxy_baseline": {
+    "run": "gqa_ru_qwen35_0_8b_lora_fast_v1",
+    "hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora",
+    "note": "Kept as historical CAUSAL_LM QA proxy; it is not the primary VLM benchmark result."
+  },
   "limitations": [
-    "The implemented evaluator is a text QA proxy over GQA-ru questions; images are not passed to the model because this checkpoint is a CAUSAL_LM LoRA adapter.",
-    "Reported evaluation is a real base-vs-adapter comparison but not a full multimodal leaderboard score.",
-    "MMBench-ru was documented and configured but not measured in the available run artifacts."
+    "The primary official benchmark result is a bounded lmms-eval smoke run with --limit 100.",
+    "Full GQA-ru testdev and MMBench-ru runs should be executed for leaderboard-grade reporting.",
+    "The adapter was trained in smoke mode on 1000 GQA-ru training examples to keep the project runnable in the available environment."
   ]
 }

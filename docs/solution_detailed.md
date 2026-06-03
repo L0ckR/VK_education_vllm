@@ -27,36 +27,45 @@
 3. На GPU запускается train.
 4. Метрики и артефакты сохраняются в `runs/` и `checkpoints/`.
 
-Фактический обученный запуск:
-- experiment: `gqa_ru_qwen35_0_8b_lora_fast_v1`;
-- base model: `Qwen/Qwen3.5-0.8B`;
-- данные: `deepvk/GQA-ru`, 38 019 train и 1 981 validation примеров;
+Фактический основной обученный запуск:
+- experiment: `gqa_ru_qwen25vl_lora_smoke_v1`;
+- base model: `Qwen/Qwen2.5-VL-3B-Instruct`;
+- данные: `deepvk/GQA-ru`, 1 000 train и 100 validation примеров в smoke-обучении;
 - LoRA: `r=16`, `alpha=32`, `dropout=0.05`;
-- лучший checkpoint: `checkpoint-4560`;
-- best validation loss: `0.4337001144886017`;
-- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora.
+- best validation loss: `0.47339919209480286`;
+- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke.
 
 ### 4.1 Реальная оценка
 
-Добавлен evaluator в `scripts/eval.py` / `src/vk_vlm_project/evaluate.py`.
+Основная оценка выполнена официальным benchmark runner `lmms-eval` на задаче `gqa-ru`.
 
-Поддерживаемые режимы:
-- teacher-forced answer loss/perplexity;
-- генеративный exact match и token F1;
-- сравнение исходной base model и LoRA-адаптера через `--compare-base`;
-- сохранение `metrics.json` и `predictions.jsonl`.
+Параметры:
+- task: `gqa-ru`;
+- dataset: `deepvk/GQA-ru`;
+- subset: `testdev_balanced_instructions`;
+- split: `testdev`;
+- metric: `exact_match`;
+- effective samples: `100`;
+- base: `Qwen/Qwen2.5-VL-3B-Instruct`;
+- adapter: LoRA, локально смерженный с base model для совместимости с `lmms-eval`.
 
 Фактическое сравнение с оригинальной моделью:
 
-| Прогон | Base | Adapter | Улучшение |
+| Прогон | Base VLM | Adapter | Улучшение |
 |---|---:|---:|---:|
-| answer loss, val 200 | 5.169734188625889 | 2.53404495023912 | 50.98% |
-| exact match, val 50 | 0.18 | 0.36 | +0.18 |
-| token F1, val 50 | 0.20 | 0.36 | +0.16 |
+| `lmms-eval gqa-ru`, limit 20 | 0.55 | 0.60 | +0.05 |
+| `lmms-eval gqa-ru`, limit 100 | 0.39 | 0.48 | +0.09 |
+
+Так как `lmms-eval --limit` предназначен для тестирования, результат трактуется как official
+benchmark smoke. Бизнес-метрика для проекта: `ExactMatch` на GQA-ru, то есть доля вопросов, где
+сгенерированный короткий ответ совпал с эталонным после нормализации регистра и пунктуации.
+
+В репозитории также сохранен предыдущий текстовый QA-прокси `gqa_ru_qwen35_0_8b_lora_fast_v1`.
+Он не выбран основным результатом, потому что не передает изображение в модель.
 
 ## 5. Что сдаётся как результат
 
-- обученная модель или LoRA-адаптер;
+- обученная VLM или LoRA-адаптер;
 - таблица фактических метрик обучения и validation loss;
 - заполненный отчёт (`reports/final_report.md`);
 - (опционально) презентация с ключевыми выводами.
@@ -68,7 +77,6 @@
 - есть материалы по обученной модели;
 - есть отдельный файл с подробным описанием решения.
 
-Ограничение текущей версии: evaluator является текстовым QA-прокси без передачи изображения в
-модель, потому что доступный checkpoint сохранен как `CAUSAL_LM` LoRA-адаптер. Результат является
-реальным сравнением adapter vs original base model, но не финальным мультимодальным leaderboard
-submission.
+Ограничение текущей версии: официальный прогон выполнен с `--limit 100`, поэтому это не финальный
+leaderboard submission. Для итоговой leaderboard-оценки нужно повторить `lmms-eval gqa-ru` без
+ограничения и отдельно измерить MMBench-ru.

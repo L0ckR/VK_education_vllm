@@ -1,0 +1,13 @@
+experiment_name: gqa_ru_qwen25vl_lora_smoke_v1
+seed: 42
+
+data_config: configs/data/gqa_ru.yaml
+model_config: configs/model/qwen25vl_3b_fast.yaml
+train_config: configs/train/lora_ft_vlm_smoke.yaml
+eval_config: configs/eval/default.yaml
+inference_config: configs/inference/default.yaml
+
+run:
+  output_dir: runs/gqa_ru_qwen25vl_lora_smoke_v1
+  checkpoint_dir: checkpoints/gqa_ru_qwen25vl_lora_smoke_v1
+  eval_metric: exact_match

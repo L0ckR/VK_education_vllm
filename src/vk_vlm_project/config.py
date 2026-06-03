@@ -85,6 +85,9 @@ class TrainConfig:
     lora: LoRAConfig
     checkpoint: CheckpointConfig
     logging: LoggingConfig
+    max_train_samples: int | None = None
+    max_eval_samples: int | None = None
+    gradient_checkpointing: bool = False
 
 
 @dataclass(slots=True)
@@ -210,35 +213,61 @@ def load_experiment_config(config_path: str | Path) -> ExperimentConfig:
             target_modules=list(lora.get("target_modules", [])),
         ),
         checkpoint=CheckpointConfig(
-            output_dir=_resolve_path(root_dir, checkpoint.get("output_dir", "checkpoints/default")),
+            output_dir=_resolve_path(
+                root_dir, checkpoint.get("output_dir", "checkpoints/default")
+            ),
             save_strategy=str(checkpoint.get("save_strategy", "steps")),
             save_steps=int(checkpoint.get("save_steps", 500)),
-            eval_steps=int(checkpoint.get("eval_steps", checkpoint.get("save_steps", 500))),
+            eval_steps=int(
+                checkpoint.get("eval_steps", checkpoint.get("save_steps", 500))
+            ),
             save_total_limit=int(checkpoint.get("save_total_limit", 3)),
-            load_best_model_at_end=bool(checkpoint.get("load_best_model_at_end", False)),
-            metric_for_best_model=str(checkpoint.get("metric_for_best_model", "eval_loss")),
+            load_best_model_at_end=bool(
+                checkpoint.get("load_best_model_at_end", False)
+            ),
+            metric_for_best_model=str(
+                checkpoint.get("metric_for_best_model", "eval_loss")
+            ),
             greater_is_better=bool(checkpoint.get("greater_is_better", False)),
         ),
         logging=LoggingConfig(
             logging_steps=int(logging.get("logging_steps", 25)),
             report_to=list(logging.get("report_to", [])) or None,
         ),
+        max_train_samples=(
+            int(train_raw["max_train_samples"])
+            if train_raw.get("max_train_samples") is not None
+            else None
+        ),
+        max_eval_samples=(
+            int(train_raw["max_eval_samples"])
+            if train_raw.get("max_eval_samples") is not None
+            else None
+        ),
+        gradient_checkpointing=bool(train_raw.get("gradient_checkpointing", False)),
     )
 
     eval_prediction = eval_raw.get("prediction", {})
     inference_prediction = inference_raw.get("prediction", {})
     eval_config = EvalConfig(
         batch_size=int(eval_raw.get("batch_size", 4)),
-        max_new_tokens=int(eval_prediction.get("max_new_tokens", eval_raw.get("max_new_tokens", 32))),
+        max_new_tokens=int(
+            eval_prediction.get("max_new_tokens", eval_raw.get("max_new_tokens", 32))
+        ),
     )
     inference = InferenceConfig(
         batch_size=int(inference_raw.get("batch_size", 1)),
         max_new_tokens=int(
-            inference_prediction.get("max_new_tokens", inference_raw.get("max_new_tokens", 64))
+            inference_prediction.get(
+                "max_new_tokens", inference_raw.get("max_new_tokens", 64)
+            )
         ),
     )
     run = RunConfig(
-        output_dir=_resolve_path(root_dir, run_raw.get("output_dir", f"runs/{experiment_raw['experiment_name']}")),
+        output_dir=_resolve_path(
+            root_dir,
+            run_raw.get("output_dir", f"runs/{experiment_raw['experiment_name']}"),
+        ),
         checkpoint_dir=_resolve_path(
             root_dir,
             run_raw.get("checkpoint_dir", train.checkpoint.output_dir),

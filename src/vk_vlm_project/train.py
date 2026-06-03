@@ -9,7 +9,11 @@ from pathlib import Path
 from typing import Any
 
 from .config import ExperimentConfig
-from .data import VisionLanguageDataCollator, VisionLanguageTrainDataset, build_vqa_samples
+from .data import (
+    VisionLanguageDataCollator,
+    VisionLanguageTrainDataset,
+    build_vqa_samples,
+)
 from .utils.io import ensure_dir
 from .utils.logging import get_logger
 from .utils.seed import set_seed
@@ -18,6 +22,7 @@ try:
     import torch
     from peft import LoraConfig, get_peft_model
     from transformers import AutoProcessor, Trainer, TrainingArguments
+
     try:
         from transformers import AutoModelForImageTextToText as AutoVisionLanguageModel
     except ImportError:
@@ -61,6 +66,8 @@ def _prepare_model_and_processor(config: ExperimentConfig) -> tuple[Any, Any]:
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     model.config.pad_token_id = tokenizer.pad_token_id
+    if config.train.gradient_checkpointing:
+        model.config.use_cache = False
 
     peft_config = LoraConfig(
         r=config.train.lora.r,
@@ -117,6 +124,7 @@ def _build_training_arguments(
         "seed": config.seed,
         "data_seed": config.seed,
         "label_names": ["labels"],
+        "gradient_checkpointing": config.train.gradient_checkpointing,
         "ddp_find_unused_parameters": False if torch.cuda.device_count() > 1 else None,
         "do_train": True,
         "do_eval": True,
@@ -179,14 +187,26 @@ def run_training(
     logger.info("Loading train/val samples for experiment `%s`", config.experiment_name)
     train_samples = build_vqa_samples(config.data, split="train")
     val_samples = build_vqa_samples(config.data, split="val")
-    logger.info("Loaded %d train and %d validation samples", len(train_samples), len(val_samples))
+    if config.train.max_train_samples is not None:
+        train_samples = train_samples[: config.train.max_train_samples]
+    if config.train.max_eval_samples is not None:
+        val_samples = val_samples[: config.train.max_eval_samples]
+    logger.info(
+        "Loaded %d train and %d validation samples",
+        len(train_samples),
+        len(val_samples),
+    )
 
     model, processor = _prepare_model_and_processor(config)
-    collator = VisionLanguageDataCollator(processor=processor, model_config=config.model)
+    collator = VisionLanguageDataCollator(
+        processor=processor, model_config=config.model
+    )
     train_dataset = VisionLanguageTrainDataset(train_samples)
     eval_dataset = VisionLanguageTrainDataset(val_samples)
 
-    training_args = _build_training_arguments(config, output_dir=output_dir, run_dir=run_dir)
+    training_args = _build_training_arguments(
+        config, output_dir=output_dir, run_dir=run_dir
+    )
     logger.info("Training checkpoints will be saved to %s", training_args.output_dir)
 
     trainer_signature = inspect.signature(Trainer.__init__)
@@ -208,9 +228,13 @@ def run_training(
     if device:
         logger.info("Device override requested: %s", device)
         if device.startswith("cuda") and not torch.cuda.is_available():
-            raise RuntimeError("CUDA device requested but torch.cuda.is_available() is false")
+            raise RuntimeError(
+                "CUDA device requested but torch.cuda.is_available() is false"
+            )
 
-    resolved_resume_checkpoint = resume_from_checkpoint or _find_last_checkpoint(training_args.output_dir)
+    resolved_resume_checkpoint = resume_from_checkpoint or _find_last_checkpoint(
+        training_args.output_dir
+    )
     if resolved_resume_checkpoint:
         logger.info("Resuming training from checkpoint %s", resolved_resume_checkpoint)
     else:
@@ -225,7 +249,9 @@ def run_training(
 
     metrics_path = run_dir / "train_metrics.json"
     config_snapshot_path = run_dir / "resolved_experiment.json"
-    metrics_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+    metrics_path.write_text(
+        json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     config_snapshot_path.write_text(
         json.dumps(asdict(config), ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -233,4 +259,8 @@ def run_training(
 
     logger.info("Saved metrics to %s", metrics_path)
     logger.info("Saved resolved config to %s", config_snapshot_path)
-    return {key: float(value) for key, value in metrics.items() if isinstance(value, (int, float))}
+    return {
+        key: float(value)
+        for key, value in metrics.items()
+        if isinstance(value, (int, float))
+    }
