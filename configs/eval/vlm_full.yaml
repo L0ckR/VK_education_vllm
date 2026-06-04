@@ -1,0 +1,4 @@
+batch_size: 1
+
+prediction:
+  max_new_tokens: 32

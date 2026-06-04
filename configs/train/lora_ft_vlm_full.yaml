@@ -24,8 +24,8 @@ lora:
 checkpoint:
   output_dir: checkpoints/lora_ft_vlm_full
   save_strategy: steps
-  save_steps: 500
-  eval_steps: 500
+  save_steps: 2377
+  eval_steps: 2377
   save_total_limit: 3
   load_best_model_at_end: true
   metric_for_best_model: eval_loss

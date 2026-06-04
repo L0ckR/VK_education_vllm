@@ -4,7 +4,7 @@ seed: 42
 data_config: configs/data/gqa_ru.yaml
 model_config: configs/model/qwen25vl_3b_fast.yaml
 train_config: configs/train/lora_ft_vlm_full.yaml
-eval_config: configs/eval/default.yaml
+eval_config: configs/eval/vlm_full.yaml
 inference_config: configs/inference/default.yaml
 
 run:
