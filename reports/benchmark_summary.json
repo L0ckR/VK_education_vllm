@@ -5,28 +5,27 @@
     "institution": "МАИ, институт 8",
     "group": "М8О-308Б-32"
   },
-  "hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke",
-  "best_run": "gqa_ru_qwen25vl_lora_smoke_v1",
-  "base_model": "Qwen/Qwen2.5-VL-3B-Instruct",
+  "primary_hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora",
+  "primary_run": "gqa_ru_qwen35_0_8b_lora_fast_v1",
+  "base_model": "Qwen/Qwen3.5-0.8B",
   "adapter_type": "LoRA",
   "dataset": {
     "name": "deepvk/GQA-ru",
     "source": "https://huggingface.co/datasets/deepvk/GQA-ru",
-    "train_samples_available": 38019,
-    "validation_samples_available": 1981,
-    "test_samples_available": 12216,
-    "train_samples_used": 1000,
-    "validation_samples_used": 100,
-    "usage": "Open VK/DeepVK GQA-ru data was used for VLM LoRA fine-tuning and official lmms-eval GQA-ru smoke evaluation."
+    "train_samples": 38019,
+    "validation_samples": 1981,
+    "testdev_samples": 12216,
+    "usage": "Image-question-answer records were used for multimodal VLM LoRA fine-tuning and official lmms-eval evaluation."
   },
   "training": {
+    "multimodal": true,
+    "vision_encoder_trainable": false,
+    "lora_scope": "language_model attention projection layers",
     "seed": 42,
     "epochs": 1.0,
-    "batch_size": 1,
-    "gradient_accumulation_steps": 16,
+    "batch_size": 8,
     "learning_rate": 0.0002,
     "mixed_precision": "bf16",
-    "gradient_checkpointing": true,
     "max_seq_length": 1024,
     "image_resolution": 336,
     "lora_r": 16,
@@ -38,24 +37,23 @@
       "v_proj",
       "o_proj"
     ],
-    "checkpoint_dir": "checkpoints/gqa_ru_qwen25vl_lora_smoke_v1",
+    "best_checkpoint": "checkpoint-4560",
     "best_metric_name": "eval_loss",
-    "best_metric_value": 0.47339919209480286
+    "best_metric_value": 0.4337001144886017
   },
   "train_metrics": {
-    "train_runtime": 714.4626,
-    "train_samples_per_second": 1.4,
-    "train_steps_per_second": 0.088,
-    "total_flos": 3775367685931008.0,
-    "train_loss": 0.6548236324673608,
+    "train_runtime": 6219.1947,
+    "train_samples_per_second": 6.113,
+    "train_steps_per_second": 0.764,
+    "train_loss": 0.04432422036801592,
     "epoch": 1.0,
-    "eval_loss": 0.47339919209480286,
-    "eval_runtime": 14.1628,
-    "eval_samples_per_second": 7.061,
-    "eval_steps_per_second": 0.494,
-    "metrics_path": "runs/gqa_ru_qwen25vl_lora_smoke_v1/train_metrics.json"
+    "eval_loss": 0.4337001144886017,
+    "eval_runtime": 116.0177,
+    "eval_samples_per_second": 17.075,
+    "eval_steps_per_second": 1.069,
+    "metrics_path": "runs/gqa_ru_qwen35_0_8b_lora_fast_v1/train_metrics.json"
   },
-  "official_benchmark_smoke": {
+  "official_benchmark_full": {
     "runner": "lmms-eval",
     "task": "gqa-ru",
     "dataset_path": "deepvk/GQA-ru",
@@ -64,39 +62,32 @@
     "metric": "exact_match",
     "metric_higher_is_better": true,
     "prompt_suffix": "Ответь одним словом.",
-    "limit_notice": "lmms-eval --limit was used for a bounded smoke comparison; this is not a full leaderboard score.",
-    "limit_20": {
-      "samples": 20,
-      "base_exact_match": 0.55,
-      "adapter_exact_match": 0.6,
-      "exact_match_delta": 0.05,
-      "base_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_base_limit20/Qwen__Qwen2.5-VL-3B-Instruct/20260604_030604_results.json",
-      "adapter_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit20/artifacts__merged_qwen25vl_gqa_ru_smoke/20260604_033600_results.json"
-    },
-    "limit_100": {
-      "samples": 100,
-      "base_exact_match": 0.39,
-      "adapter_exact_match": 0.48,
-      "exact_match_delta": 0.09,
-      "relative_improvement": 0.23076923076923078,
-      "base_stderr": 0.04902071300001975,
-      "adapter_stderr": 0.050211673156867795,
-      "base_correct": 39,
-      "adapter_correct": 48,
-      "base_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_base_limit100/Qwen__Qwen2.5-VL-3B-Instruct/20260604_034100_results.json",
-      "adapter_results_path": "runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100/artifacts__merged_qwen25vl_gqa_ru_smoke/20260604_034349_results.json",
-      "base_samples_path": "runs/lmms_eval/gqa_ru_qwen25vl_base_limit100/Qwen__Qwen2.5-VL-3B-Instruct/20260604_034100_samples_gqa-ru.jsonl",
-      "adapter_samples_path": "runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100/artifacts__merged_qwen25vl_gqa_ru_smoke/20260604_034349_samples_gqa-ru.jsonl"
-    }
+    "samples": 12216,
+    "limit": null,
+    "model_backend": "qwen3_5",
+    "model_args_common": "enable_thinking=False",
+    "base_exact_match": 0.2861820563195809,
+    "adapter_exact_match": 0.48321872953503603,
+    "exact_match_delta": 0.19703667321545515,
+    "relative_improvement": 0.6885011441647597,
+    "base_stderr": 0.004089480999753636,
+    "adapter_stderr": 0.004521458266039995,
+    "base_correct": 3496,
+    "adapter_correct": 5903,
+    "correct_delta": 2407,
+    "base_results_path": "runs/lmms_eval/gqa_ru_qwen35_base_full/Qwen__Qwen3.5-0.8B/20260604_141134_results.json",
+    "adapter_results_path": "runs/lmms_eval/gqa_ru_qwen35_lora_full/artifacts__merged_qwen35_gqa_ru_full/20260604_145224_results.json"
   },
-  "previous_text_proxy_baseline": {
-    "run": "gqa_ru_qwen35_0_8b_lora_fast_v1",
-    "hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora",
-    "note": "Kept as historical CAUSAL_LM QA proxy; it is not the primary VLM benchmark result."
+  "secondary_experiment": {
+    "base_model": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "status": "Full GQA-ru training and full base-vs-adapter evaluation are in progress.",
+    "smoke_hf_artifact": "https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke",
+    "smoke_limit_100_base_exact_match": 0.39,
+    "smoke_limit_100_adapter_exact_match": 0.48
   },
   "limitations": [
-    "The primary official benchmark result is a bounded lmms-eval smoke run with --limit 100.",
-    "Full GQA-ru testdev and MMBench-ru runs should be executed for leaderboard-grade reporting.",
-    "The adapter was trained in smoke mode on 1000 GQA-ru training examples to keep the project runnable in the available environment."
+    "The vision encoder was frozen; LoRA was trained only in language model attention projection layers.",
+    "MMBench-ru has not yet been measured.",
+    "The Qwen2.5-VL full experiment is still running and is not included in the primary result."
   ]
 }

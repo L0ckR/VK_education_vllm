@@ -1,7 +1,7 @@
 ---
 base_model: Qwen/Qwen3.5-0.8B
 library_name: peft
-pipeline_tag: text-generation
+pipeline_tag: image-text-to-text
 tags:
 - lora
 - peft
@@ -9,31 +9,47 @@ tags:
 - deepvk
 - gqa-ru
 - visual-question-answering
+- lmms-eval
 datasets:
 - deepvk/GQA-ru
 ---
 
 # vk-vlm-gqa-ru-qwen35-08b-lora
 
-LoRA-адаптер, обученный для проекта VK Education Vision-Language Modeling на открытых данных
-VK/DeepVK GQA-ru.
+Мультимодальный LoRA-адаптер для `Qwen/Qwen3.5-0.8B`, обученный на открытом датасете
+VK/DeepVK `GQA-ru` для русскоязычного visual question answering.
 
 Автор: Ибрагимов Далгат Магомедалиевич, МАИ институт 8, группа М8О-308Б-32.
 
+## Результат
+
+Официальная оценка выполнена через `lmms-eval` на полном `gqa-ru` testdev split без `--limit`.
+Модель получала изображения и вопросы. Для воспроизводимого короткого ответа использовался
+`enable_thinking=False`.
+
+| Модель | Samples | ExactMatch | Correct |
+|---|---:|---:|---:|
+| `Qwen/Qwen3.5-0.8B` | 12 216 | 0.2862 | 3 496 |
+| LoRA adapter | 12 216 | 0.4832 | 5 903 |
+
+Улучшение: **+0.1970 ExactMatch absolute**, **+68.85% relative**, **+2 407** правильных ответов.
+
 ## Данные
 
-Использован открытый датасет `deepvk/GQA-ru` из коллекции DeepVK VLM на Hugging Face. Данные были
-приведены к JSONL-формату image/question/answer и использованы для обучения VQA-style модели.
-
-Локальные размеры split в запуске:
+Использован открытый датасет `deepvk/GQA-ru`. Локальные JSONL-манифесты содержали путь к
+изображению, русский вопрос и эталонный ответ.
 
 | Split | Samples |
 |---|---:|
 | train | 38 019 |
 | validation | 1 981 |
-| test | 12 216 |
+| testdev | 12 216 |
 
 ## Обучение
+
+Обучение было мультимодальным: processor получал изображения, вопросы и ответы. Vision encoder
+оставался замороженным, а LoRA обучалась в language model attention слоях, адаптируя обработку
+visual tokens для русскоязычного VQA.
 
 | Параметр | Значение |
 |---|---|
@@ -46,43 +62,33 @@ VK/DeepVK GQA-ru.
 | Learning rate | `2e-4` |
 | Precision | `bf16` |
 | Seed | `42` |
+| Best checkpoint | `checkpoint-4560` |
 
-Лучший checkpoint: `checkpoint-4560`, выбран по `eval_loss`.
-
-## Метрики
-
-Training metrics:
-
-| Metric | Value |
+| Training metric | Value |
 |---|---:|
 | train_loss | 0.04432422036801592 |
 | eval_loss | 0.4337001144886017 |
 | train_runtime_sec | 6219.1947 |
-| train_samples_per_second | 6.113 |
-| eval_samples_per_second | 17.075 |
-
-Base-vs-adapter text QA proxy evaluation on GQA-ru validation:
-
-| Metric | Base `Qwen/Qwen3.5-0.8B` | LoRA adapter |
-|---|---:|---:|
-| Answer loss, 200 val samples | 5.169734188625889 | 2.53404495023912 |
-| Answer perplexity, 200 val samples | 175.8680835335284 | 12.604387280790764 |
-| Exact match, 50 val samples | 0.18 | 0.36 |
-| Token F1, 50 val samples | 0.20 | 0.36 |
-
-Ограничение: это текстовая QA-оценка по вопросам GQA-ru без image input. Она показывает реальное
-улучшение адаптера относительно исходной модели, но не является полным VLM leaderboard score.
 
 ## Использование
 
 ```python
 from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoProcessor, Qwen3_5ForConditionalGeneration
 
-base_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3.5-0.8B", trust_remote_code=True)
-tokenizer = AutoTokenizer.from_pretrained("lockR/vk-vlm-gqa-ru-qwen35-08b-lora", trust_remote_code=True)
-model = PeftModel.from_pretrained(base_model, "lockR/vk-vlm-gqa-ru-qwen35-08b-lora")
+base = "Qwen/Qwen3.5-0.8B"
+adapter = "lockR/vk-vlm-gqa-ru-qwen35-08b-lora"
+
+processor = AutoProcessor.from_pretrained(base, trust_remote_code=True)
+model = Qwen3_5ForConditionalGeneration.from_pretrained(base, trust_remote_code=True)
+model = PeftModel.from_pretrained(model, adapter)
 ```
+
+## Ограничения
+
+- Vision encoder не дообучался: LoRA применяется только к language model слоям.
+- Результат измерен на GQA-ru; качество на других доменах и MMBench-ru не подтверждено.
+- Модель может наследовать ограничения и смещения базовой модели и датасета.
 
 ## Репозиторий проекта
 

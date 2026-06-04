@@ -23,9 +23,9 @@
 - Использование в проекте:
   - train/val/test манифесты в `data/gqa_ru/`;
   - конфиг датасета — `configs/data/gqa_ru.yaml`;
-  - эксперимент — `configs/experiments/gqa_ru_qwen25vl_lora_v1.yaml`.
-  - фактический основной запуск — `configs/experiments/gqa_ru_qwen25vl_lora_smoke_v1.yaml`;
-  - официальный benchmark smoke — `lmms-eval` task `gqa-ru`,
+  - основной эксперимент — `configs/experiments/gqa_ru_qwen35_0_8b_lora_fast_v1.yaml`;
+  - дополнительный full-эксперимент — `configs/experiments/gqa_ru_qwen25vl_lora_full_v1.yaml`;
+  - официальный full benchmark — `lmms-eval` task `gqa-ru`,
     subset `testdev_balanced_instructions`, split `testdev`, metric `exact_match`.
 
 ### 3.2 MMBench-ru
@@ -39,9 +39,12 @@
 
 ## 4. Планируемая модель и подход
 
-- Основная VLM-база: `Qwen/Qwen2.5-VL-3B-Instruct`
+- Основная завершенная VLM-база: `Qwen/Qwen3.5-0.8B`
+  (см. `configs/model/qwen35_0_8b_fast.yaml`).
+- Дополнительная VLM-база: `Qwen/Qwen2.5-VL-3B-Instruct`
   (см. `configs/model/qwen25vl_3b_fast.yaml`).
-- Метод: parameter-efficient дообучение через LoRA (см. `configs/train/lora_ft_vlm_smoke.yaml`).
+- Метод: parameter-efficient мультимодальное дообучение через LoRA. Изображения передаются
+  модели, vision encoder заморожен, LoRA обучается в language model attention слоях.
 - Целевые метрики:
   - GQA-ru: official `exact_match` из `lmms-eval`;
   - MMBench-ru: `mmbench_score`;
@@ -60,15 +63,15 @@
 - Набор конфигов для train/eval/inference и экспериментов.
 - Скрипты запуска, которые можно выполнить на GPU-машине без изменения структуры.
 - Документация под финальную сдачу проекта.
-- Фактические метрики VLM-обучения в `runs/gqa_ru_qwen25vl_lora_smoke_v1/`.
-- Официальная GQA-ru smoke-оценка через `lmms-eval` в `runs/lmms_eval/`:
-  ExactMatch улучшен с `0.39` до `0.48` на одинаковых 100 testdev примерах.
+- Фактические метрики VLM-обучения в `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/`.
+- Официальная полная GQA-ru оценка через `lmms-eval` в `runs/lmms_eval/`:
+  ExactMatch улучшен с `0.2862` до `0.4832` на всех 12 216 testdev примерах.
 - Итоговый отчет в `reports/final_report.md`.
-- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke.
+- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora.
 
 ## 7. Следующий шаг
 
-1. Прогнать `lmms-eval gqa-ru` без `--limit` для leaderboard-grade результата.
+1. Завершить full Qwen2.5-VL эксперимент и добавить его base-vs-adapter результат.
 2. Прогнать `mmbench_ru_dev`.
-3. Расширить обучение за пределы smoke-режима: больше train samples и подбор LoRA-гиперпараметров.
-4. Сохранить полный набор benchmark logs в `runs/lmms_eval/` и обновить итоговый отчёт.
+3. Проверить LoRA для projector/merger и последних vision encoder слоев.
+4. Добавить анализ ошибок по типам вопросов GQA-ru.

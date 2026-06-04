@@ -28,12 +28,16 @@
 4. Метрики и артефакты сохраняются в `runs/` и `checkpoints/`.
 
 Фактический основной обученный запуск:
-- experiment: `gqa_ru_qwen25vl_lora_smoke_v1`;
-- base model: `Qwen/Qwen2.5-VL-3B-Instruct`;
-- данные: `deepvk/GQA-ru`, 1 000 train и 100 validation примеров в smoke-обучении;
+- experiment: `gqa_ru_qwen35_0_8b_lora_fast_v1`;
+- base model: `Qwen/Qwen3.5-0.8B`;
+- данные: `deepvk/GQA-ru`, 38 019 train и 1 981 validation примеров;
 - LoRA: `r=16`, `alpha=32`, `dropout=0.05`;
-- best validation loss: `0.47339919209480286`;
-- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke.
+- best validation loss: `0.4337001144886017`;
+- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora.
+
+Обучение было мультимодальным: data collator передавал processor изображения, вопросы и ответы.
+Vision encoder оставался замороженным, а LoRA обучалась в language model attention projection
+слоях. Это адаптирует обработку visual tokens без дорогого полного дообучения vision encoder.
 
 ### 4.1 Реальная оценка
 
@@ -45,23 +49,22 @@
 - subset: `testdev_balanced_instructions`;
 - split: `testdev`;
 - metric: `exact_match`;
-- effective samples: `100`;
-- base: `Qwen/Qwen2.5-VL-3B-Instruct`;
+- effective samples: `12 216`;
+- base: `Qwen/Qwen3.5-0.8B`;
 - adapter: LoRA, локально смерженный с base model для совместимости с `lmms-eval`.
 
 Фактическое сравнение с оригинальной моделью:
 
 | Прогон | Base VLM | Adapter | Улучшение |
 |---|---:|---:|---:|
-| `lmms-eval gqa-ru`, limit 20 | 0.55 | 0.60 | +0.05 |
-| `lmms-eval gqa-ru`, limit 100 | 0.39 | 0.48 | +0.09 |
+| `lmms-eval gqa-ru`, full testdev | 0.2862 | 0.4832 | +0.1970 |
 
-Так как `lmms-eval --limit` предназначен для тестирования, результат трактуется как official
-benchmark smoke. Бизнес-метрика для проекта: `ExactMatch` на GQA-ru, то есть доля вопросов, где
-сгенерированный короткий ответ совпал с эталонным после нормализации регистра и пунктуации.
+Оценка выполнена без `--limit` через мультимодальный backend `qwen3_5`. Бизнес-метрика для
+проекта: `ExactMatch` на GQA-ru, то есть доля вопросов, где сгенерированный короткий ответ совпал
+с эталонным после нормализации регистра и пунктуации.
 
-В репозитории также сохранен предыдущий текстовый QA-прокси `gqa_ru_qwen35_0_8b_lora_fast_v1`.
-Он не выбран основным результатом, потому что не передает изображение в модель.
+Дополнительный полный эксперимент `Qwen/Qwen2.5-VL-3B-Instruct` выполняется тем же
+мультимодальным training pipeline. Его итоговый full benchmark будет добавлен после завершения.
 
 ## 5. Что сдаётся как результат
 
@@ -77,6 +80,5 @@ benchmark smoke. Бизнес-метрика для проекта: `ExactMatch`
 - есть материалы по обученной модели;
 - есть отдельный файл с подробным описанием решения.
 
-Ограничение текущей версии: официальный прогон выполнен с `--limit 100`, поэтому это не финальный
-leaderboard submission. Для итоговой leaderboard-оценки нужно повторить `lmms-eval gqa-ru` без
-ограничения и отдельно измерить MMBench-ru.
+Ограничение текущей версии: vision encoder заморожен, а MMBench-ru еще не измерен. Следующая
+абляция должна проверить LoRA для multimodal projector/merger и последних vision encoder слоев.

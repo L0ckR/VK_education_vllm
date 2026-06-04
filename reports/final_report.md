@@ -6,7 +6,7 @@
 - Автор: Ибрагимов Далгат Магомедалиевич.
 - Организация: МАИ, институт 8, группа М8О-308Б-32.
 - Репозиторий: https://github.com/L0ckR/VK_education_vllm
-- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke
+- HF-артефакт: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
 - Версия отчета: 2026-06-04.
 
 ## 2. Цель и задачи
@@ -19,7 +19,7 @@
 - изучить открытые VLM-датасеты VK/DeepVK;
 - подготовить структуру проекта, конфиги, скрипты обучения и документацию;
 - сформировать локальные JSONL-манифесты GQA-ru;
-- обучить LoRA-адаптер для `Qwen/Qwen2.5-VL-3B-Instruct`;
+- обучить LoRA-адаптер для мультимодальной `Qwen/Qwen3.5-0.8B`;
 - прогнать официальный `lmms-eval` benchmark `gqa-ru`;
 - сохранить метрики, sample-логи, описание решения и ссылку на модельный артефакт.
 
@@ -43,21 +43,21 @@ MMBench-ru добавлен в конфигурации проекта как с
 
 | Параметр | Значение |
 |---|---|
-| Experiment | `gqa_ru_qwen25vl_lora_smoke_v1` |
-| Base model | `Qwen/Qwen2.5-VL-3B-Instruct` |
+| Experiment | `gqa_ru_qwen35_0_8b_lora_fast_v1` |
+| Base model | `Qwen/Qwen3.5-0.8B` |
 | Adapter | LoRA |
 | Target modules | `q_proj`, `k_proj`, `v_proj`, `o_proj` |
 | LoRA rank / alpha / dropout | `16 / 32 / 0.05` |
 | Epochs | `1.0` |
-| Batch size | `1`, gradient accumulation `16` |
+| Batch size | `8` |
 | LR | `2e-4` |
 | Precision | `bf16` |
 | Seed | `42` |
-| Train / eval samples | `1 000 / 100` |
+| Train / validation samples | `38 019 / 1 981` |
 
-Финальный LoRA-адаптер сохранен в `checkpoints/gqa_ru_qwen25vl_lora_smoke_v1` и опубликован на
-Hugging Face. Для официальной оценки адаптер был локально смержен с базовой моделью в ignored
-директорию `artifacts/merged_qwen25vl_gqa_ru_smoke`.
+Обучение было мультимодальным: модель получала изображения, вопросы и ответы. Vision encoder
+оставался замороженным, а LoRA обучалась в language model attention слоях. Лучший checkpoint по
+`eval_loss`: `checkpoint-4560`. Для official evaluation адаптер был локально смержен с base model.
 
 ## 5. Результаты
 
@@ -65,12 +65,12 @@ Hugging Face. Для официальной оценки адаптер был �
 
 | Метрика | Значение |
 |---|---:|
-| train_loss | 0.6548236324673608 |
-| eval_loss | 0.47339919209480286 |
-| train_runtime_sec | 714.4626 |
-| train_samples_per_second | 1.4 |
-| train_steps_per_second | 0.088 |
-| eval_samples_per_second | 7.061 |
+| train_loss | 0.04432422036801592 |
+| eval_loss | 0.4337001144886017 |
+| train_runtime_sec | 6219.1947 |
+| train_samples_per_second | 6.113 |
+| train_steps_per_second | 0.764 |
+| eval_samples_per_second | 17.075 |
 
 ### 5.2 Официальная benchmark-метрика
 
@@ -80,34 +80,31 @@ Hugging Face. Для официальной оценки адаптер был �
 - subset: `testdev_balanced_instructions`;
 - split: `testdev`;
 - metric: `exact_match`, case/punctuation insensitive;
-- effective samples: `100`;
+- effective samples: `12 216`;
 - prompt suffix: `Ответь одним словом.`
 
-`lmms-eval` предупреждает, что `--limit` предназначен для тестирования, поэтому результат ниже
-зафиксирован как официальный benchmark smoke, а не полный leaderboard score.
+Оценка выполнена без `--limit` через мультимодальный backend `qwen3_5`; для короткого ответа
+использован `enable_thinking=False`.
 
-| Модель | ExactMatch | stderr | Correct / 100 |
-|---|---:|---:|
-| `Qwen/Qwen2.5-VL-3B-Instruct` | 0.39 | 0.04902071300001975 | 39 |
-| LoRA adapter | 0.48 | 0.050211673156867795 | 48 |
+| Модель | ExactMatch | stderr | Correct / 12 216 |
+|---|---:|---:|---:|
+| `Qwen/Qwen3.5-0.8B` | 0.2861820563195809 | 0.004089480999753636 | 3 496 |
+| LoRA adapter | 0.48321872953503603 | 0.004521458266039995 | 5 903 |
 
-Улучшение: **+0.09 ExactMatch absolute**, или **+23.1% relative** к исходной VLM.
+Улучшение: **+0.1970 ExactMatch absolute**, **+68.85% relative**, **+2 407** правильных ответов.
 
-Дополнительно на 20-sample smoke та же official task дала `0.55 -> 0.60`.
+### 5.3 Второй эксперимент
 
-### 5.3 Предыдущий текстовый QA-прокси
-
-В репозитории также сохранен предыдущий `CAUSAL_LM` LoRA-эксперимент
-`gqa_ru_qwen35_0_8b_lora_fast_v1` как дополнительный baseline. Он улучшал loss-based QA proxy на
-GQA-ru validation, но не являлся полноценной VLM-оценкой, поэтому не выбран основным результатом.
+Полный эксперимент `Qwen/Qwen2.5-VL-3B-Instruct` сейчас выполняется. До его завершения в отчете
+сохранен только smoke-результат `0.39 -> 0.48` на 100 примерах, который не сравнивается напрямую с
+полным Qwen3.5 testdev результатом.
 
 ## 6. Артефакты
 
-- LoRA-адаптер на Hugging Face: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen25vl-3b-lora-smoke
-- Метрики обучения VLM: `runs/gqa_ru_qwen25vl_lora_smoke_v1/train_metrics.json`
-- Official baseline result: `runs/lmms_eval/gqa_ru_qwen25vl_base_limit100/Qwen__Qwen2.5-VL-3B-Instruct/20260604_034100_results.json`
-- Official adapter result: `runs/lmms_eval/gqa_ru_qwen25vl_lora_smoke_limit100/artifacts__merged_qwen25vl_gqa_ru_smoke/20260604_034349_results.json`
-- Official sample logs: `runs/lmms_eval/gqa_ru_qwen25vl_*_limit100/**/20260604_*_samples_gqa-ru.jsonl`
+- LoRA-адаптер на Hugging Face: https://huggingface.co/lockR/vk-vlm-gqa-ru-qwen35-08b-lora
+- Метрики обучения VLM: `runs/gqa_ru_qwen35_0_8b_lora_fast_v1/train_metrics.json`
+- Official baseline result: `runs/lmms_eval/gqa_ru_qwen35_base_full/Qwen__Qwen3.5-0.8B/20260604_141134_results.json`
+- Official adapter result: `runs/lmms_eval/gqa_ru_qwen35_lora_full/artifacts__merged_qwen35_gqa_ru_full/20260604_145224_results.json`
 - Сводка метрик: `reports/benchmark_summary.json`
 - Подробное описание решения: `docs/solution_detailed.md`
 - Описание проекта: `docs/project_description.md`
@@ -116,11 +113,11 @@ GQA-ru validation, но не являлся полноценной VLM-оцен�
 
 Текущий результат закрывает проектное требование по описанию проекта, использованию открытых
 данных VK, публикации обученного LoRA-адаптера и сравнению с оригинальной моделью по benchmark
-метрике. Главный технический риск: официальный `lmms-eval` запуск ограничен `limit=100` из-за
-времени, поэтому это не полный leaderboard score.
+метрике на полном testdev split. Главный технический риск: vision encoder оставался замороженным,
+поэтому адаптация выполнялась только через language model LoRA.
 
 Следующие шаги:
-- прогнать GQA-ru testdev без `--limit`;
+- завершить полный Qwen2.5-VL эксперимент и сравнить две VLM;
 - прогнать MMBench-ru;
-- добавить `reports/predictions_*.jsonl` и итоговую таблицу benchmark-score;
-- расширить обучение за пределы smoke-режима: больше train samples, больше эпох и подбор LoRA rank.
+- провести абляцию LoRA для projector/merger и последних vision encoder слоев;
+- добавить анализ ошибок по типам вопросов.
